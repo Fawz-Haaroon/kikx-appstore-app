@@ -73,25 +73,26 @@
       </div>
     </div>
 
-      <InstallerPanel
-        v-if="showInstaller && assetData"
-        :kikxApp
-        :assetData
-        @close="closeInstaller"
-      />
+    <InstallerPanel
+      v-if="showInstaller && assetData"
+      :assetData="assetData"
+      @close="closeInstaller"
+    />
   </div>
 </template>
 
 <script setup>
-  import { ref, computed } from "vue";
+  import { ref, computed, onBeforeMount } from "vue";
 
   import InstallerPanel from "@/components/panels/InstallerPanel.vue";
-  const { kikxApp, changeScreen } = defineProps(["kikxApp", "changeScreen"]);
+
+  const props = defineProps(["invokeAppUrl"]);
+  const emit = defineEmits(["changeScreen"]);
 
   const fileInput = ref(null);
   const selectedFile = ref(null);
 
-  const githubUrl = ref(null);
+  const githubUrl = ref(props.invokeAppUrl);
 
   const showInstaller = ref(false);
 
@@ -127,7 +128,13 @@
     }
 
     if (success) {
-      changeScreen("apps");
+      emit("changeScreen", "apps");
     }
   }
+
+  onBeforeMount(() => {
+    if (!props.invokeAppUrl) return;
+
+    handleGithubInstall();
+  });
 </script>

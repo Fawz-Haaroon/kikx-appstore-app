@@ -8,14 +8,20 @@
       <!-- Progress -->
       <div
         class="absolute inset-y-0 left-0"
-        :class="[`bg-${color}`, dragging ? '' : 'transition-all duration-200']"
+        :class="[
+          colorClasses[color]?.bg,
+          dragging ? '' : 'transition-all duration-200'
+        ]"
         :style="{ width: progress + '%' }"
       ></div>
 
       <!-- Text -->
       <h1
         class="absolute inset-0 flex items-center justify-center text-sm font-medium pointer-events-none"
-        :class="[installed ? 'text-success' : 'texopacity-70', dragging ? `text-${color}-content`:  '']"
+        :class="[
+          installed ? 'text-success' : 'opacity-70',
+          dragging ? colorClasses[color]?.content : ''
+        ]"
       >
         {{ installed ? successLabel : label }}
       </h1>
@@ -111,6 +117,29 @@
   const dragging = ref(false);
 
   let max = 0;
+
+  const colorClasses = {
+    primary: {
+      bg: "bg-primary",
+      text: "text-primary",
+      content: "text-primary-content"
+    },
+    success: {
+      bg: "bg-success",
+      text: "text-success",
+      content: "text-success-content"
+    },
+    error: {
+      bg: "bg-error",
+      text: "text-error",
+      content: "text-error-content"
+    },
+    warning: {
+      bg: "bg-warning",
+      text: "text-warning",
+      content: "text-warning-content"
+    }
+  };
 
   onMounted(async () => {
     await nextTick();

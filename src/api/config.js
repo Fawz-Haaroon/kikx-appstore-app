@@ -6,10 +6,6 @@ export const apiUrl = DEV
   ? "http://localhost:8000"
   : `${protocol}//${hostname}${port ? `:${port}` : ""}`;
 
-export const wsUrl = DEV
-  ? "ws://localhost:8000"
-  : `${protocol === "https:" ? "wss:" : "ws:"}//${hostname}${port ? `:${port}` : ""}`;
-
 // ----------------
 
 // Get url
@@ -35,3 +31,14 @@ export const getAppIcon = (icon, appName = null) => {
   }
   return getUrl(`/public/app/${appName}/${icon}`);
 };
+
+export const REPO_BASE_URL =
+  "https://raw.githubusercontent.com/luvbyte/kikx-apps-index/main/";
+
+export function getIconUrl(icon) {
+  if (icon.startsWith("http")) return icon;
+  return (
+    "https://raw.githubusercontent.com/luvbyte/kikx-apps-index/refs/heads/main/icons/" +
+    icon
+  );
+}

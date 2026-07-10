@@ -9,7 +9,6 @@
         v-if="selectedApp"
         :manifest="selectedApp"
         :systemApps="systemApps"
-        :kikxApp
         @close="reloadApps"
       />
     </Transition>
@@ -42,7 +41,7 @@
   import AppCardSmall from "@/components/AppCardSmall.vue";
   import AppManagePanel from "@/components/panels/AppManagePanel.vue";
 
-  const { kikxApp } = defineProps(["kikxApp"]);
+  import { app } from "@/api";
 
   const selectedApp = ref(null);
   const apps = ref([]);
@@ -55,8 +54,8 @@
 
     const query = search.value.toLowerCase().trim();
 
-    return apps.value.filter(app =>
-      [app.title, app.name, app.category, app.author].some(field =>
+    return apps.value.filter(a =>
+      [a.title, a.name, a.category, a.author].some(field =>
         field?.toString().toLowerCase().includes(query)
       )
     );
@@ -72,12 +71,12 @@
   }
 
   async function getSystemAppsList() {
-    const apps = await kikxApp.system.getAppsList(true);
-    return apps.filter(app => app.system).map(app => app.name);
+    const apps = await app.system.getAppsList(true);
+    return apps.filter(a => a.system).map(a => a.name);
   }
 
   async function fetchAppsList() {
-    const res = await kikxApp.system.request(`app/installed-apps`);
+    const res = await app.system.request(`app/installed-apps`);
 
     if (!res.ok) {
       throw new Error(res.error);

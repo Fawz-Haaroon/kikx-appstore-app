@@ -57,12 +57,14 @@ jobs:
 
       - name: Prepare package
         run: |
-          mkdir -p app
+          rm -rf app
+
+          mkdir -p app/public
 
           cp -r dist app/www
-          cp -r public app/public
+          cp public/icon.png app/public/icon.png
           cp app.json app/app.json
-      
+
       - name: Create KIKX
         run: |
           zip -r app.zip app

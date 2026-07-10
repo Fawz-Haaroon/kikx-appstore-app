@@ -16,7 +16,7 @@
           v-for="app in filteredApps"
           :key="app.name"
           :app
-          :icon="getIconUrl(app)"
+          :icon="getIconUrl(app.icon)"
           :isUrl="true"
           @click="selectApp(app)"
         />
@@ -25,8 +25,7 @@
 
     <InstallerPanel
       v-if="showInstaller && assetData"
-      :kikxApp
-      :assetData
+      :assetData="assetData"
       @close="closeInstaller"
     />
   </div>
@@ -34,23 +33,28 @@
 
 <script setup>
   import { ref, computed, onBeforeMount } from "vue";
-  import AppCardSmall from "@/components/AppCardSmall.vue";
-  import AppManagePanel from "@/components/panels/AppManagePanel.vue";
+  import { REPO_BASE_URL, getIconUrl } from "@/api/config";
 
+  import AppCardSmall from "@/components/AppCardSmall.vue";
+
+  import AppManagePanel from "@/components/panels/AppManagePanel.vue";
   import InstallerPanel from "@/components/panels/InstallerPanel.vue";
-  const { kikxApp, changeScreen } = defineProps(["kikxApp", "changeScreen"]);
+
+  const emit = defineEmits(["changeScreen"]);
+
+  // Search model
+  const search = ref("");
+  const appsIndex = ref([]);
 
   const selectedApp = ref(null);
+
+  const loading = ref(true);
+  const showInstaller = ref(false);
+
   const assetData = computed(
     () =>
       selectedApp.value?.url && `https://github.com/${selectedApp.value.url}`
   );
-
-  const appsIndex = ref([]);
-  const search = ref("");
-
-  const showInstaller = ref(false);
-  const loading = ref(true);
 
   function selectApp(app) {
     selectedApp.value = app;
@@ -62,7 +66,7 @@
     selectedApp.value = null;
 
     if (success) {
-      changeScreen("apps");
+      emit("changeScreen", "apps");
     }
   }
 
@@ -77,17 +81,6 @@
       )
     );
   });
-
-  const REPO_BASE_URL =
-    "https://raw.githubusercontent.com/luvbyte/kikx-apps-index/main/";
-
-  function getIconUrl(app) {
-    if (app.icon.startsWith("http")) return app.icon;
-    return (
-      "https://raw.githubusercontent.com/luvbyte/kikx-apps-index/refs/heads/main/icons/" +
-      app.icon
-    );
-  }
 
   async function fetchIndex() {
     const response = await fetch(REPO_BASE_URL + "index.json");

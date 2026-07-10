@@ -31,6 +31,8 @@
 
 <script setup>
   import { ref, computed, onBeforeMount, onBeforeUnmount } from "vue";
+  import { app } from "@/api"
+  
   import AppManifest from "@/components/AppManifest.vue";
   import SlideButton from "@/components/SlideButton.vue";
 
@@ -39,23 +41,24 @@
 
   import { AppInstaller } from "@/api/Kpm";
 
-  const { kikxApp, assetData } = defineProps(["kikxApp", "assetData"]);
+  const props = defineProps(["assetData"]);
   const emit = defineEmits(["close"]);
 
   // when closing
   const systemApps = ref([]);
 
-  const installer = new AppInstaller(kikxApp);
+  const installer = new AppInstaller(app);
 
   // Prepare response data
   const appData = ref(null);
   const errorText = ref(null);
   const loading = ref(true);
+  
   // Loading label
-  const loadingText = ref("Loading");
+  const loadingText = ref("Fetching");
 
   // If its github
-  const isGithub = () => typeof assetData === "string";
+  const isGithub = () => typeof props.assetData === "string";
 
   // Slider label dynamic
   const sliderLabel = computed(() => {
@@ -113,11 +116,12 @@
   }
 
   async function getSystemAppsList() {
-    const apps = await kikxApp.system.getAppsList(true);
-    return apps.filter(app => app.system).map(app => app.name);
+    const apps = await app.system.getAppsList(true);
+    return apps.filter(a => a.system).map(a => a.name);
   }
 
-  const isSystemApp = () => systemApps.value.includes(appData.value.manifest.name);
+  const isSystemApp = () =>
+    systemApps.value.includes(appData.value.manifest.name);
 
   function preCheck() {
     if (!appData.value) throw Error("Unknown error");
@@ -137,8 +141,8 @@
 
     try {
       appData.value = isGithub()
-        ? await installer.prepare_github(assetData)
-        : await installer.prepare(assetData);
+        ? await installer.prepare_github(props.assetData)
+        : await installer.prepare(props.assetData);
 
       preCheck();
     } catch (err) {

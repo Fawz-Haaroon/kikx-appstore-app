@@ -2,9 +2,14 @@
   <div class="bg-base-100 fixed fullscreen inset-0 z-60 flex flex-col gap-2">
     <Header :title="manifest.title" :close="onClose" />
 
-    <AppManifest :manifest :uninstallApp :isSystemApp="isSystemApp" />
+    <AppManifest
+      :manifest="manifest"
+      :uninstallApp="uninstallApp"
+      :isSystemApp="isSystemApp"
+    />
 
-    <div v-if="!loading">
+    <Loading v-if="loading" label="Uninstalling" />
+    <div v-else>
       <div
         v-if="errorText"
         class="p-2 py-6 bg-base-200 text-lg flex items-center justify-center"
@@ -24,23 +29,21 @@
 
 <script setup>
   import { ref } from "vue";
+  import { app } from "@/api";
+
   import AppManifest from "@/components/AppManifest.vue";
   import SlideButton from "@/components/SlideButton.vue";
 
   import Header from "@/components/ui/Header.vue";
+  import Loading from "@/components/ui/Loading.vue";
 
-  const { manifest, kikxApp, systemApps } = defineProps([
-    "manifest",
-    "kikxApp",
-    "systemApps"
-  ]);
-
+  const props = defineProps(["manifest", "systemApps"]);
   const emit = defineEmits(["close"]);
 
   const loading = ref(false);
   const errorText = ref(null);
 
-  const isSystemApp = () => systemApps.includes(manifest.name);
+  const isSystemApp = () => props.systemApps.includes(props.manifest.name);
 
   function onClose() {
     emit("close");
@@ -52,8 +55,8 @@
       errorText.value = null;
       loading.value = true;
 
-      const res = await kikxApp.system.request(
-        `app/uninstall?app_name=${manifest.name}`,
+      const res = await app.system.request(
+        `app/uninstall?app_name=${props.manifest.name}`,
         "DELETE"
       );
 
