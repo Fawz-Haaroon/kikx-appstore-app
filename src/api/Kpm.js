@@ -5,12 +5,14 @@ export class AppInstaller {
     this.manifest = null;
   }
 
+  // Get app preview url
   getPreviewUrl = file => {
     return this.app.getUrl(
       `${this.app.system.baseURL}/app/preview/${this.tempId}/${file}`
     );
   };
 
+  // Prepare package
   async prepare(file) {
     const formData = new FormData();
     formData.append("file", file);
@@ -32,6 +34,7 @@ export class AppInstaller {
     return res.data;
   }
 
+  // Prepare package from github
   async prepare_github(url, tag = null) {
     tag ? `&tag=${tag}` : "";
 
@@ -50,6 +53,7 @@ export class AppInstaller {
     return res.data;
   }
 
+  // Install app
   async install() {
     if (!this.tempId) {
       throw new Error("No prepared installation session");
@@ -68,6 +72,7 @@ export class AppInstaller {
     return res.data;
   }
 
+  // Cancel Install and clear prepared package
   async cancel() {
     if (!this.tempId) {
       return { res: "already_cancelled" };
@@ -86,17 +91,5 @@ export class AppInstaller {
 
     return res.data;
   }
-
-  async uninstall() {
-    const res = await this.app.system.request(
-      `app/uninstall?app_name=${this.manifest.name}`,
-      "DELETE"
-    );
-
-    if (!res.ok) {
-      throw new Error(res.error.detail);
-    }
-
-    return res.data;
-  }
 }
+

@@ -3,10 +3,11 @@ import { DEV, apiUrl } from "@/api/config";
 
 const app = createApp();
 
+// If its dev mode
 if (DEV) {
   app.config.configureUrls({
     apiUrl,
-    appID: "444617590cd040709cb185c6f21960a3"
+    appID: "19b9d9e0059f410f9e9c76b4f94112ca"
   });
 }
 

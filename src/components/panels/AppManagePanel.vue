@@ -16,7 +16,15 @@
       >
         <h1 class="font-semibold text-error text-sm">{{ errorText }}</h1>
       </div>
-      <div v-else class="p-2 py-4">
+      <div v-else class="p-2 pb-4">
+        <label class="w-full flex justify-center label cursor-pointer p-2">
+          <input
+            type="checkbox"
+            v-model="keepData"
+            class="checkbox checkbox-primary"
+          />
+          <span class="label-text">Keep Data</span>
+        </label>
         <SlideButton
           @complete="uninstallApp"
           label="Slide to uninstall"
@@ -42,6 +50,7 @@
 
   const loading = ref(false);
   const errorText = ref(null);
+  const keepData = ref(false);
 
   const isSystemApp = () => props.systemApps.includes(props.manifest.name);
 
@@ -49,14 +58,13 @@
     emit("close");
   }
 
-  // Todo: add this in kpm.js
   async function uninstallApp() {
     try {
       errorText.value = null;
       loading.value = true;
 
       const res = await app.system.request(
-        `app/uninstall?app_name=${props.manifest.name}`,
+        `app/uninstall?app_name=${props.manifest.name}&keep_data=${keepData.value}`,
         "DELETE"
       );
 

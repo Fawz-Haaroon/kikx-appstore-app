@@ -74,7 +74,6 @@
       >
         {{ manifest.description }}
       </p>
-
       <!-- Storage access -->
       <div>
         <div class="divider m-0">Storage</div>

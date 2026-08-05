@@ -12,15 +12,17 @@
   // Init loading
   const loading = ref(true);
 
+  // Active Screen [ home / install / apps ]
   const currentScreen = ref("install");
   const invokeAppUrl = ref(null);
 
+  // Chane active screen
   function changeScreen(name) {
     currentScreen.value = name;
   }
 
+  // Init
   async function init() {
-    // Dev
     const info = await app.fetchAppInfo();
     const url = info.options.query.url;
 
