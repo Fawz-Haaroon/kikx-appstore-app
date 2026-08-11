@@ -17,6 +17,11 @@
   font-style: normal;
 }
 
+@plugin "daisyui" {
+  themes: 
+    light, dark
+}
+
 body {
   font-family: 'Cause', sans-serif;
 }

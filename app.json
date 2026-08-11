@@ -1,17 +1,18 @@
 {
   "name": "com.kikx.appstore",
   "title": "AppStore",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "author": "luvbyte",
   "description": "kikx app store",
-  "kikx_version": "0.3.0",
+  "kikx_version": "0.3.3",
   "include": ["public", "www"],
   "iframe": {
     "sandbox": ["allow-scripts"]
   },
   "system": {
-    "access": ["kpm"]
+    "access": ["kpm", "invoke"]
   },
+  "kv": true,
   "sudo": true,
   "theme": "dark"
 }

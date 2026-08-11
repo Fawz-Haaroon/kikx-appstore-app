@@ -1,6 +1,6 @@
 <script setup>
-  import { ref, onBeforeMount } from "vue";
-  import { app } from "@/api";
+  import { ref, onBeforeMount, watch } from "vue";
+  import { app, getTheme, setTheme } from "@/api";
 
   import BottomNavigation from "@/components/BottomNavigation.vue";
   import Loading from "@/components/Loading.vue";
@@ -11,6 +11,7 @@
 
   // Init loading
   const loading = ref(true);
+  const theme = ref("light");
 
   // Active Screen [ home / install / apps ]
   const currentScreen = ref("install");
@@ -31,20 +32,60 @@
       invokeAppUrl.value = url;
     }
 
+    theme.value = await getTheme();
+
     loading.value = false;
   }
+
+  function toggleTheme() {
+    theme.value = theme.value === "light" ? "dark" : "light";
+  }
+
+  watch(theme, (newTheme, _) => {
+    setTheme(newTheme);
+  });
 
   onBeforeMount(init);
 </script>
 
 <template>
-  <div data-theme="light" class="h-dvh flex flex-col overflow-hidden">
+  <div
+    v-if="!loading"
+    :data-theme="theme"
+    class="h-dvh flex flex-col overflow-hidden transition-colors bg-base-100"
+  >
     <!-- Title -->
     <div
-      class="py-3 flex gap-1 items-center px-2 bg-base-100 text-base-content shadow font-bold text-lg"
+      class="py-3 flex gap-1 items-center justify-between px-2 bg-base-100 text-base-content shadow font-bold text-lg"
     >
-      <img src="@/assets/icon.png" class="w-6 aspect-square" />
-      <h1>AppStore</h1>
+      <div class="flex items-center gap-1">
+        <img src="@/assets/icon.png" class="w-6 aspect-square" />
+        <h1>AppStore</h1>
+      </div>
+
+      <button @click="toggleTheme">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+        >
+          <path d="M0 0h24v24H0z" fill="none" />
+          <g fill="none">
+            <path
+              fill="currentColor"
+              d="M2.75 12A9.25 9.25 0 0 0 12 21.25V2.75A9.25 9.25 0 0 0 2.75 12"
+            />
+            <path
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M12 21.25a9.25 9.25 0 0 0 0-18.5m0 18.5a9.25 9.25 0 0 1 0-18.5m0 18.5V2.75"
+            />
+          </g>
+        </svg>
+      </button>
     </div>
 
     <Loading v-if="loading" />
