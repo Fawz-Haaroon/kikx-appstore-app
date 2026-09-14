@@ -73,11 +73,13 @@
       </div>
     </div>
 
-    <InstallerPanel
-      v-if="showInstaller && assetData"
-      :assetData="assetData"
-      @close="closeInstaller"
-    />
+    <Transition name="fade-scale">
+      <InstallerPanel
+        v-if="showInstaller && assetData"
+        :assetData="assetData"
+        @close="closeInstaller"
+      />
+    </Transition>
   </div>
 </template>
 
@@ -86,25 +88,35 @@
 
   import InstallerPanel from "@/components/panels/InstallerPanel.vue";
 
-  const props = defineProps(["invokeAppUrl"]);
-  const emit = defineEmits(["changeScreen"]);
+  const props = defineProps({
+    invokeAppUri: {
+      type: String,
+      required: false
+    }
+  });
+  const emit = defineEmits(["success"]);
 
   const fileInput = ref(null);
   const selectedFile = ref(null);
-
-  const githubUrl = ref(props.invokeAppUrl);
-
   const showInstaller = ref(false);
-
   const processing = ref(false);
+
+  const githubUrl = ref("");
 
   const assetData = computed(
     () => selectedFile.value || githubUrl.value || null
   );
 
-  async function handleGithubInstall() {
+  function handleGithubInstall() {
     if (!githubUrl.value) return;
     processing.value = true;
+    showInstaller.value = true;
+  }
+
+  function handleStorageInstall(uri) {
+    processing.value = true;
+    // checks
+    selectedFile.value = uri;
     showInstaller.value = true;
   }
 
@@ -128,13 +140,26 @@
     }
 
     if (success) {
-      emit("changeScreen", "apps");
+      emit("success");
+    }
+  }
+
+  async function handleInvokeUri() {
+    const uri = props.invokeAppUri;
+
+    if (!uri) return;
+
+    if (uri.startsWith("https://github.com")) {
+      githubUrl.value = uri;
+      handleGithubInstall();
+    } else {
+      handleStorageInstall(uri);
     }
   }
 
   onBeforeMount(() => {
-    if (!props.invokeAppUrl) return;
+    if (!props.invokeAppUri) return;
 
-    handleGithubInstall();
+    handleInvokeUri();
   });
 </script>

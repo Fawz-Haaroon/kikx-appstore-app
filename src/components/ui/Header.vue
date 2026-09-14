@@ -3,7 +3,7 @@
     class="px-2 py-3 bg-primary text-primary-content flex items-center justify-between"
   >
     <h1 class="font-bold text-lg">{{ title }}</h1>
-    <button @click="close">
+    <button @click="emit('close')">
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="26"
@@ -20,5 +20,11 @@
 </template>
 
 <script setup>
-  defineProps(["title", "close"]);
+  defineProps({
+    title: {
+      type: String,
+      required: true
+    }
+  });
+  const emit = defineEmits(["close"]);
 </script>

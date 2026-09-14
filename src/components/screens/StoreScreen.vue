@@ -23,11 +23,13 @@
       </div>
     </div>
 
-    <InstallerPanel
-      v-if="showInstaller && assetData"
-      :assetData="assetData"
-      @close="closeInstaller"
-    />
+    <Transition name="fade-scale">
+      <InstallerPanel
+        v-if="showInstaller && assetData"
+        :assetData="assetData"
+        @close="closeInstaller"
+      />
+    </Transition>
   </div>
 </template>
 

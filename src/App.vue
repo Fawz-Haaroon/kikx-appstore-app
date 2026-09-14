@@ -1,13 +1,13 @@
 <script setup>
-  import { ref, onBeforeMount, watch } from "vue";
+  import { ref, onMounted, watch } from "vue";
   import { app, getTheme, setTheme } from "@/api";
 
   import BottomNavigation from "@/components/BottomNavigation.vue";
-  import Loading from "@/components/Loading.vue";
+  import Loading from "@/components/ui/Loading.vue";
 
-  import HomeScreen from "@/components/screens/HomeScreen.vue";
+  import StoreScreen from "@/components/screens/StoreScreen.vue";
   import InstallScreen from "@/components/screens/InstallScreen.vue";
-  import AppsScreen from "@/components/screens/AppsScreen.vue";
+  import ManagerScreen from "@/components/screens/ManagerScreen.vue";
 
   // Init loading
   const loading = ref(true);
@@ -15,7 +15,7 @@
 
   // Active Screen [ home / install / apps ]
   const currentScreen = ref("install");
-  const invokeAppUrl = ref(null);
+  const invokeAppUri = ref(null);
 
   // Chane active screen
   function changeScreen(name) {
@@ -24,16 +24,20 @@
 
   // Init
   async function init() {
-    const info = await app.fetchAppInfo();
-    const url = info.options.query.url;
+    const { query, share } = app.info.options;
 
-    // Open github link
-    if (url && typeof url === "string") {
-      invokeAppUrl.value = url;
+    const isValidShare =
+      share?.itemType === "file" ||
+      (share?.itemType === "link" &&
+        share.item.startsWith("https://github.com"));
+
+    const uri = isValidShare ? share.item : query?.uri;
+
+    if (typeof uri === "string") {
+      invokeAppUri.value = uri;
     }
 
     theme.value = await getTheme();
-
     loading.value = false;
   }
 
@@ -45,7 +49,9 @@
     setTheme(newTheme);
   });
 
-  onBeforeMount(init);
+  onMounted(() => {
+    app.run(init);
+  });
 </script>
 
 <template>
@@ -91,16 +97,16 @@
     <Loading v-if="loading" />
     <!-- Screens -->
     <div v-else class="flex-1 flex flex-col overflow-hidden">
-      <HomeScreen
+      <StoreScreen
         v-if="currentScreen === 'home'"
         @changeScreen="changeScreen"
       />
       <InstallScreen
         v-if="currentScreen === 'install'"
-        :invokeAppUrl="invokeAppUrl"
-        @changeScreen="changeScreen"
+        :invokeAppUri="invokeAppUri"
+        @success="() => changeScreen('apps')"
       />
-      <AppsScreen v-if="currentScreen === 'apps'" />
+      <ManagerScreen v-if="currentScreen === 'apps'" />
     </div>
     <!-- Bottom Navigation -->
     <BottomNavigation

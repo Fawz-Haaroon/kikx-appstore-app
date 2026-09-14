@@ -1,6 +1,6 @@
 <template>
   <div class="bg-base-100 fixed fullscreen inset-0 z-60 flex flex-col gap-2">
-    <Header title="App Installer" :close="() => onClose()" />
+    <Header title="App Installer" @close="() => onClose()" />
 
     <div class="flex-1 flex flex-col overflow-hidden">
       <!-- Manifest -->
@@ -8,7 +8,6 @@
       <AppManifest
         v-if="appData"
         :manifest="appData.manifest"
-        :isSystemApp="isSystemApp"
         :iconUrl="getIconUrl(appData.manifest.icon)"
       />
     </div>
@@ -17,7 +16,9 @@
       v-if="errorText"
       class="p-2 py-6 bg-base-200 text-lg flex items-center justify-center"
     >
-      <h1 class="font-semibold text-error text-sm">{{ errorText }}</h1>
+      <h1 class="font-semibold text-error text-sm break-all">
+        {{ errorText }}
+      </h1>
     </div>
     <!-- Install Button -->
     <div
@@ -31,15 +32,13 @@
 
 <script setup>
   import { ref, computed, onBeforeMount, onBeforeUnmount } from "vue";
-  import { app } from "@/api"
-  
+  import { app, kpm } from "@/api";
+
   import AppManifest from "@/components/AppManifest.vue";
-  import SlideButton from "@/components/SlideButton.vue";
+  import SlideButton from "@/components/ui/SlideButton.vue";
 
   import Loading from "@/components/ui/Loading.vue";
   import Header from "@/components/ui/Header.vue";
-
-  import { AppInstaller } from "@/api/Kpm";
 
   const props = defineProps(["assetData"]);
   const emit = defineEmits(["close"]);
@@ -47,18 +46,21 @@
   // when closing
   const systemApps = ref([]);
 
-  const installer = new AppInstaller(app);
-
   // Prepare response data
   const appData = ref(null);
   const errorText = ref(null);
   const loading = ref(true);
-  
+
   // Loading label
   const loadingText = ref("Fetching");
 
   // If its github
-  const isGithub = () => typeof props.assetData === "string";
+  const isGithub = () =>
+    typeof props.assetData === "string" &&
+    props.assetData.startsWith("https://github.com");
+
+  // cache github urls app temporary
+  const installer = kpm.getInstaller(isGithub ? props.assetData : null);
 
   // Slider label dynamic
   const sliderLabel = computed(() => {
@@ -82,8 +84,10 @@
   };
 
   async function completeInstall() {
+    const isUpdate = appData.value.is_update;
+
     try {
-      if (appData.value.is_update) {
+      if (isUpdate) {
         loadingText.value = "Updating...";
       } else {
         loadingText.value = "Installing...";
@@ -93,8 +97,12 @@
       await installer.install();
 
       // Close - success
+      app.system.alert(
+        `Successfully ${isUpdate ? "updated" : "installed"} ${appData.value.manifest.title}`
+      );
       emit("close", true);
     } catch (err) {
+      console.log(err);
       // Error
       errorText.value = err.message || "Unknon error";
     } finally {
@@ -107,21 +115,8 @@
     loadingText.value = "Closing...";
     loading.value = true;
 
-    // Clear cache in server
-    if (appData.value) {
-      installer.cancel();
-    }
-
     emit("close", success);
   }
-
-  async function getSystemAppsList() {
-    const apps = await app.system.getAppsList(true);
-    return apps.filter(a => a.system).map(a => a.name);
-  }
-
-  const isSystemApp = () =>
-    systemApps.value.includes(appData.value.manifest.name);
 
   function preCheck() {
     if (!appData.value) throw Error("Unknown error");
@@ -137,25 +132,19 @@
   }
 
   onBeforeMount(async () => {
-    systemApps.value = await getSystemAppsList();
-
     try {
-      appData.value = isGithub()
-        ? await installer.prepare_github(props.assetData)
-        : await installer.prepare(props.assetData);
-
+      if (isGithub()) {
+        appData.value = await installer.github(props.assetData);
+      } else if (typeof props.assetData === "string") {
+        appData.value = await installer.storage(props.assetData);
+      } else {
+        appData.value = await installer.prepare(props.assetData);
+      }
       preCheck();
     } catch (err) {
       errorText.value = err.message || "Unknown error";
     } finally {
       loading.value = false;
-    }
-  });
-
-  // cancel on unmount
-  onBeforeUnmount(() => {
-    if (appData.value) {
-      installer.cancel();
     }
   });
 </script>

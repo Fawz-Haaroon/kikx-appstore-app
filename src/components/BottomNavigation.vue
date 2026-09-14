@@ -1,5 +1,10 @@
 <script setup>
-  defineProps(["currentScreen"]);
+  defineProps({
+    currentScreen: {
+      type: String,
+      required: true
+    }
+  });
   const emit = defineEmits(["changeScreen"]);
 </script>
 
@@ -33,7 +38,7 @@
           />
         </svg>
 
-        <span class="text-[11px] mt-0.5">Home</span>
+        <span class="text-[11px] mt-0.5">Store</span>
       </div>
     </button>
 

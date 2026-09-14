@@ -1,10 +1,14 @@
 <template>
   <div class="bg-base-100 fixed fullscreen inset-0 z-60 flex flex-col gap-2">
-    <Header :title="manifest.title" :close="onClose" />
+    <Header
+      v-if="appInfo"
+      :title="appInfo.manifest.title"
+      @close="emit('close')"
+    />
 
     <AppManifest
-      :manifest="manifest"
-      :uninstallApp="uninstallApp"
+      v-if="appInfo"
+      :manifest="appInfo.manifest"
       :isSystemApp="isSystemApp"
     />
 
@@ -12,7 +16,7 @@
     <div v-else>
       <div
         v-if="errorText"
-        class="p-2 py-6 bg-base-200 text-lg flex items-center justify-center"
+        class="p-2 py-4 bg-base-200 text-lg flex items-center justify-center"
       >
         <h1 class="font-semibold text-error text-sm">{{ errorText }}</h1>
       </div>
@@ -21,7 +25,7 @@
           <input
             type="checkbox"
             v-model="keepData"
-            class="checkbox checkbox-primary"
+            class="checkbox checkbox-primary checkbox-sm"
           />
           <span class="label-text">Keep Data</span>
         </label>
@@ -36,26 +40,37 @@
 </template>
 
 <script setup>
-  import { ref } from "vue";
-  import { app } from "@/api";
+  import { ref, computed, onBeforeMount } from "vue";
+  import { kpm } from "@/api";
 
   import AppManifest from "@/components/AppManifest.vue";
-  import SlideButton from "@/components/SlideButton.vue";
+  import SlideButton from "@/components/ui/SlideButton.vue";
 
   import Header from "@/components/ui/Header.vue";
   import Loading from "@/components/ui/Loading.vue";
 
-  const props = defineProps(["manifest", "systemApps"]);
+  const props = defineProps({
+    appName: {
+      type: String,
+      required: true
+    }
+  });
   const emit = defineEmits(["close"]);
 
+  const appInfo = ref(null);
   const loading = ref(false);
   const errorText = ref(null);
   const keepData = ref(false);
 
-  const isSystemApp = () => props.systemApps.includes(props.manifest.name);
+  const isSystemApp = computed(() => appInfo.value?.meta.system);
 
-  function onClose() {
-    emit("close");
+  async function fetchAppInfo() {
+    const { data, error } = await kpm.getAppInfo(props.appName);
+    if (error) {
+      throw new Error(error.detail);
+    }
+
+    appInfo.value = data;
   }
 
   async function uninstallApp() {
@@ -63,19 +78,15 @@
       errorText.value = null;
       loading.value = true;
 
-      const res = await app.system.request(
-        `app/uninstall?app_name=${props.manifest.name}&keep_data=${keepData.value}`,
-        "DELETE"
-      );
+      await kpm.uninstallApp(props.appName, keepData.value);
 
-      if (!res.ok) {
-        throw new Error(res.error.detail);
-      }
-      onClose();
+      emit("close");
     } catch (err) {
       errorText.value = err.message || "Unknown error";
     } finally {
       loading.value = false;
     }
   }
+
+  onBeforeMount(fetchAppInfo);
 </script>

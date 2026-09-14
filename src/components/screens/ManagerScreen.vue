@@ -7,8 +7,7 @@
     <Transition name="fade-scale">
       <AppManagePanel
         v-if="selectedApp"
-        :manifest="selectedApp"
-        :systemApps="systemApps"
+        :appName="selectedApp.name"
         @close="reloadApps"
       />
     </Transition>
@@ -27,7 +26,7 @@
         <AppCardSmall
           v-for="app in filteredApps"
           :key="app.name"
-          :app
+          :app="app"
           @click="() => selectApp(app)"
         />
       </div>
@@ -45,7 +44,6 @@
 
   const selectedApp = ref(null);
   const apps = ref([]);
-  const systemApps = ref([]);
 
   const search = ref("");
 
@@ -70,23 +68,15 @@
     selectedApp.value = app;
   }
 
-  async function getSystemAppsList() {
-    const apps = await app.system.getAppsList(true);
-    return apps.filter(a => a.system).map(a => a.name);
-  }
-
   async function fetchAppsList() {
-    const res = await app.system.request(`app/installed-apps`);
+    const { data, error } = await app.system.getAppsList(true);
 
-    if (!res.ok) {
-      throw new Error(res.error);
+    if (error) {
+      throw new Error(error.detail);
     }
 
-    systemApps.value = await getSystemAppsList();
-    apps.value = res.data;
+    apps.value = data;
   }
 
-  onBeforeMount(async () => {
-    await fetchAppsList();
-  });
+  onBeforeMount(fetchAppsList);
 </script>
