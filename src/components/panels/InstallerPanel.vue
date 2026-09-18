@@ -60,7 +60,7 @@
     props.assetData.startsWith("https://github.com");
 
   // cache github urls app temporary
-  const installer = kpm.getInstaller(isGithub ? props.assetData : null);
+  const installer = kpm.getInstaller(isGithub() ? props.assetData : null);
 
   // Slider label dynamic
   const sliderLabel = computed(() => {
@@ -104,7 +104,7 @@
     } catch (err) {
       console.log(err);
       // Error
-      errorText.value = err.message || "Unknon error";
+      errorText.value = err.message || "Unknown error";
     } finally {
       loading.value = false;
     }
